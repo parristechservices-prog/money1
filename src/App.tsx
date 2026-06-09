@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, BadgeCheck, BookOpen, Calculator, Check, ChevronRight, CircleDollarSign, Clock3, ExternalLink, GraduationCap, LayoutDashboard, Lightbulb, Menu, MessageCircle, Search, ShieldCheck, Sparkles, Target, TrendingUp, X } from "lucide-react";
 import { incomeOptions, modules, quiz, resources } from "./data";
+import { courses } from "./lessons";
 import "./index.css";
 
 type Page="home"|"learn"|"resources"|"reality"|"tools"|"quiz"|"coach";
@@ -36,7 +37,24 @@ function Intro({kicker,title,text}:{kicker:string;title:string;text:string}){ret
 
 function Learn({done,setDone}:{done:string[];setDone:(x:string[])=>void}){
  const [open,setOpen]=useState("foundations");
- return <div className="page"><Intro kicker="YOUR CURRICULUM" title="Principles before products." text="Move from stable foundations to informed experiments. Each module ends with one useful action."/><Disclaimer/><div className="modules">{modules.map(m=><article className={done.includes(m[0])?"complete":""} key={m[0]}><button className="moduleTop" onClick={()=>setOpen(open===m[0]?"":m[0])}><b>{done.includes(m[0])?<Check/>:m[1]}</b><span><small>{m[2]}</small><h2>{m[3]}</h2><p>{m[4]}</p></span><ChevronRight/></button>{open===m[0]&&<div className="moduleBody"><h3>Key ideas</h3><div className="topics">{m[5].map(x=><span key={x}><Check/>{x}</span>)}</div><div className="action"><Lightbulb/><span><b>Practical action</b>{m[6]}</span></div><button className="done" onClick={()=>setDone(done.includes(m[0])?done.filter(x=>x!==m[0]):[...done,m[0]])}>{done.includes(m[0])?"Completed":"Mark module complete"} <Check/></button></div>}</article>)}</div></div>
+ return <div className="page"><Intro kicker="YOUR CURRICULUM" title="Principles before products." text="Seven complete mini-courses, built from the supplied research. Read each lesson, check your understanding, then take one practical action."/><Disclaimer/><div className="modules">{modules.map(m=><article className={done.includes(m[0])?"complete":""} key={m[0]}><button className="moduleTop" onClick={()=>setOpen(open===m[0]?"":m[0])}><b>{done.includes(m[0])?<Check/>:m[1]}</b><span><small>{m[2]}</small><h2>{m[3]}</h2><p>{m[4]}</p><em>{courses[m[0]].lessons.length} lessons · module check · practical action</em></span><ChevronRight/></button>{open===m[0]&&<ModuleCourse id={m[0]} action={m[6]} complete={done.includes(m[0])} toggle={()=>setDone(done.includes(m[0])?done.filter(x=>x!==m[0]):[...done,m[0]])}/>}</article>)}</div></div>
+}
+
+function ModuleCourse({id,action,complete,toggle}:{id:string;action:string;complete:boolean;toggle:()=>void}){
+ const course=courses[id];const [lesson,setLesson]=useState(0);const [answers,setAnswers]=useState<Record<number,number>>({});const current=course.lessons[lesson];
+ const score=course.check.filter((q,i)=>answers[i]===q.correct).length;const checked=Object.keys(answers).length===course.check.length;
+ return <div className="course">
+  <div className="courseWhy"><Lightbulb/><span><b>Why this module matters</b>{course.why}</span></div>
+  <div className="lessonTabs">{course.lessons.map((x,i)=><button className={lesson===i?"active":""} onClick={()=>setLesson(i)} key={x.title}><b>{i+1}</b><span>{x.title}<small>{x.time}</small></span></button>)}</div>
+  <div className="lessonContent"><span className="lessonKicker">LESSON {lesson+1} OF {course.lessons.length} · {current.time}</span><h2>{current.title}</h2><p className="lessonSummary">{current.summary}</p>
+   {current.sections.map(s=><section className="lessonSection" key={s.heading}><h3>{s.heading}</h3><p>{s.body}</p>{s.example&&<div className="example"><b>In practice</b>{s.example}</div>}{s.caution&&<div className="caution"><ShieldCheck/><span><b>Important caution</b>{s.caution}</span></div>}</section>)}
+   <div className="takeaways"><h3>Keep these ideas</h3>{current.takeaways.map(x=><span key={x}><Check/>{x}</span>)}</div>
+   <a className="lessonSource" href={current.source.url} target="_blank" rel="noreferrer">Continue with {current.source.label}<ExternalLink/></a>
+   <div className="lessonNav"><button disabled={lesson===0} onClick={()=>setLesson(lesson-1)}>Previous lesson</button><button disabled={lesson===course.lessons.length-1} onClick={()=>setLesson(lesson+1)}>Next lesson <ArrowRight/></button></div>
+  </div>
+  <div className="moduleCheck"><Head kicker="QUICK MODULE CHECK" title="Check your understanding"/>{course.check.map((q,i)=><div className="checkQuestion" key={q.question}><h3>{i+1}. {q.question}</h3><div>{q.answers.map((a,n)=><button className={answers[i]===n?(n===q.correct?"correct":"wrong"):""} onClick={()=>setAnswers({...answers,[i]:n})} key={a}>{a}{answers[i]===n&&<Check/>}</button>)}</div>{answers[i]!==undefined&&<p>{answers[i]===q.correct?"Correct. ":"Review this one. "}{q.explanation}</p>}</div>)}</div>
+  <div className="moduleFinish"><div className="action"><Lightbulb/><span><b>Practical action</b>{action}</span></div><div className="reflection"><b>Reflection prompt</b><span>{course.reflection}</span></div><button className="done" disabled={!checked&&!complete} onClick={toggle}>{complete?"Completed":checked?`Mark complete · ${score}/${course.check.length} correct`:"Answer the module check to complete"} <Check/></button></div>
+ </div>
 }
 function Resources(){
  const [q,setQ]=useState(""),[filter,setFilter]=useState("All");const cats=["All",...new Set(resources.map(x=>x[2]))];const shown=resources.filter(x=>(filter==="All"||x[2]===filter)&&x.join(" ").toLowerCase().includes(q.toLowerCase()));
