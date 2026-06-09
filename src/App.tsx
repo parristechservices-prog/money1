@@ -1,18 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, BadgeCheck, BookOpen, Calculator, Check, ChevronRight, CircleDollarSign, Clock3, ExternalLink, GraduationCap, LayoutDashboard, Lightbulb, Menu, MessageCircle, Search, ShieldCheck, Sparkles, Target, TrendingUp, X } from "lucide-react";
+import { ArrowRight, BadgeCheck, BarChart3, BookOpen, CalendarDays, Calculator, Check, ChevronRight, CircleDollarSign, Clock3, ExternalLink, GraduationCap, LayoutDashboard, Lightbulb, Menu, MessageCircle, Search, ShieldCheck, Sparkles, Target, TrendingUp, X } from "lucide-react";
 import { incomeOptions, modules, quiz, resources } from "./data";
 import { courses } from "./lessons";
+import { thirtyDayPlan } from "./plan";
 import "./index.css";
 
-type Page="home"|"learn"|"resources"|"reality"|"tools"|"quiz"|"coach";
-const nav=[["home","Overview",LayoutDashboard],["learn","Learning path",GraduationCap],["resources","Library",BookOpen],["reality","Reality check",ShieldCheck],["tools","Tools",Calculator],["quiz","Knowledge check",Target],["coach","Money coach",MessageCircle]] as const;
+type Page="home"|"learn"|"plan"|"resources"|"reality"|"tools"|"quiz"|"coach"|"progress";
+const nav=[["home","Overview",LayoutDashboard],["learn","Learning path",GraduationCap],["plan","30-day path",CalendarDays],["resources","Library",BookOpen],["reality","Reality check",ShieldCheck],["tools","Tools",Calculator],["quiz","Knowledge check",Target],["coach","Money coach",MessageCircle],["progress","Progress",BarChart3]] as const;
 const Disclaimer=()=> <div className="disclaimer"><ShieldCheck size={17}/><span><b>Education only.</b> MoneyMap AU is not financial, tax, legal or investment advice. Check authoritative Australian sources before acting.</span></div>;
 const Progress=({value}:{value:number})=><div className="progress"><span style={{width:`${value}%`}}/></div>;
 
 export default function App(){
  const [page,setPage]=useState<Page>("home"),[menu,setMenu]=useState(false);
  const [done,setDone]=useState<string[]>(()=>JSON.parse(localStorage.getItem("progress")||"[]"));
+ const [days,setDays]=useState<number[]>(()=>JSON.parse(localStorage.getItem("plan-days")||"[]"));
  useEffect(()=>localStorage.setItem("progress",JSON.stringify(done)),[done]);
+ useEffect(()=>localStorage.setItem("plan-days",JSON.stringify(days)),[days]);
  const go=(p:Page)=>{setPage(p);setMenu(false);scrollTo({top:0,behavior:"smooth"})};
  const pct=Math.round(done.length/modules.length*100);
  return <div className="shell"><aside className={menu?"open":""}>
@@ -21,14 +24,16 @@ export default function App(){
   <div className="sideProgress"><div><span>Your progress</span><b>{pct}%</b></div><Progress value={pct}/><small>{done.length} of 7 modules complete</small></div>
   <div className="truth"><BadgeCheck/><span><b>Truth layer</b><small>MoneySmart · ATO · RBA · Scamwatch</small></span></div>
  </aside><main><header><button className="mobile" onClick={()=>setMenu(!menu)}>{menu?<X/>:<Menu/>}</button><strong>{nav.find(x=>x[0]===page)?.[1]}<small>Australian-first financial education</small></strong><span className="safe"><ShieldCheck size={13}/> Education only</span></header>
- {page==="home"&&<Home go={go} pct={pct} done={done}/>}
+ {page==="home"&&<Home go={go} pct={pct} done={done} days={days}/>}
  {page==="learn"&&<Learn done={done} setDone={setDone}/>}
+ {page==="plan"&&<Plan days={days} setDays={setDays}/>}
  {page==="resources"&&<Resources/>}{page==="reality"&&<Reality/>}{page==="tools"&&<Tools/>}{page==="quiz"&&<Quiz/>}{page==="coach"&&<Coach/>}
+ {page==="progress"&&<ProgressPage done={done} days={days} go={go}/>}
  <footer>MoneyMap AU · Built from the supplied research curriculum <span>Verify material decisions with authoritative sources or a qualified professional.</span></footer></main></div>
 }
 
-function Home({go,pct,done}:{go:(p:Page)=>void;pct:number;done:string[]}){
- return <div className="page"><section className="hero"><div><span className="tag"><Sparkles size={13}/> A calmer way to learn money</span><h1>Build money judgement.<em>Not money hype.</em></h1><p>Learn personal finance, economics, investing basics and passive-income realism through an Australian lens.</p><div className="actions"><button onClick={()=>go("learn")}>Start learning <ArrowRight/></button><button onClick={()=>go("reality")}>Check an income idea</button></div></div><div className="score"><div>{pct}%<small>path complete</small></div><p><b>{done.length}/7</b> modules <b>20 min</b> a day <b>$0</b> to learn</p></div></section><Disclaimer/>
+function Home({go,pct,done,days}:{go:(p:Page)=>void;pct:number;done:string[];days:number[]}){
+ return <div className="page"><section className="hero"><div><span className="tag"><Sparkles size={13}/> A calmer way to learn money</span><h1>Build money judgement.<em>Not money hype.</em></h1><p>Learn personal finance, economics, investing basics and passive-income realism through an Australian lens.</p><div className="actions"><button onClick={()=>go(days.length?"plan":"learn")}>{days.length?"Continue 30-day path":"Start learning"} <ArrowRight/></button><button onClick={()=>go("reality")}>Check an income idea</button></div></div><div className="score"><div>{pct}%<small>path complete</small></div><p><b>{done.length}/7</b> modules <b>{days.length}/30</b> days <b>$0</b> to learn</p></div></section><Disclaimer/>
  <Head kicker="START HERE" title="A sensible order of operations"/><div className="sequence">{modules.slice(0,4).map(m=><button onClick={()=>go("learn")} key={m[0]}><span>{m[1]}</span><small>{m[2]}</small><h3>{m[3]}</h3><p>{m[4]}</p>{done.includes(m[0])&&<i><Check/></i>}</button>)}</div>
  <div className="split"><section className="dark"><span className="tag">THE CORE IDEA</span><h2>Passive income is usually capital doing work, or past labour packaged into an asset.</h2><p>Most online passive-income content is better understood as a business, sales funnel, or survivorship-biased entertainment.</p><button onClick={()=>go("reality")}>Run the reality check <ArrowRight/></button></section><section><Head kicker="TRUTH LAYER" title="Check claims at the source"/>{["MoneySmart","ATO","RBA Education","Scamwatch","ASIC","business.gov.au"].map(x=><div className="source" key={x}><BadgeCheck/>{x}</div>)}</section></div></div>
 }
@@ -56,6 +61,23 @@ function ModuleCourse({id,action,complete,toggle}:{id:string;action:string;compl
   <div className="moduleFinish"><div className="action"><Lightbulb/><span><b>Practical action</b>{action}</span></div><div className="reflection"><b>Reflection prompt</b><span>{course.reflection}</span></div><button className="done" disabled={!checked&&!complete} onClick={toggle}>{complete?"Completed":checked?`Mark complete · ${score}/${course.check.length} correct`:"Answer the module check to complete"} <Check/></button></div>
  </div>
 }
+
+function Plan({days,setDays}:{days:number[];setDays:(x:number[])=>void}){
+ const [week,setWeek]=useState("All");const groups=["All",...new Set(thirtyDayPlan.map(x=>x.week))];const next=thirtyDayPlan.find(x=>!days.includes(x.day));const shown=thirtyDayPlan.filter(x=>week==="All"||x.week===week);
+ const toggle=(day:number)=>setDays(days.includes(day)?days.filter(x=>x!==day):[...days,day]);
+ return <div className="page"><Intro kicker="20 MINUTES A DAY" title="Your 30-day learning path" text="A practical sequence from cashflow and Australian rules through economics, investing foundations and passive-income realism."/><div className="planHero"><div><span>Path progress</span><b>{days.length}/30 days</b><Progress value={days.length/30*100}/></div>{next?<div><small>NEXT UP · DAY {next.day}</small><h3>{next.topic}</h3><p>{next.action}</p><button onClick={()=>document.getElementById(`day-${next.day}`)?.scrollIntoView({behavior:"smooth"})}>Go to today <ArrowRight/></button></div>:<div><small>PATH COMPLETE</small><h3>You finished the 30-day path.</h3><p>Keep the weekly review habit and revisit modules when decisions arise.</p></div>}</div>
+ <div className="filters">{groups.map(x=><button className={week===x?"active":""} onClick={()=>setWeek(x)} key={x}>{x}</button>)}</div>
+ <div className="dayList">{shown.map(x=><article id={`day-${x.day}`} className={days.includes(x.day)?"complete":""} key={x.day}><button className="dayCheck" onClick={()=>toggle(x.day)}>{days.includes(x.day)?<Check/>:x.day}</button><div className="dayMain"><small>DAY {x.day} · {x.week} · 15–20 MIN</small><h3>{x.topic}</h3><p>{x.task}</p><div className="dayAction"><Lightbulb/><span><b>Do this today</b>{x.action}</span></div></div><a href={x.url} target="_blank" rel="noreferrer">{x.source}<ExternalLink/></a></article>)}</div></div>
+}
+
+function ProgressPage({done,days,go}:{done:string[];days:number[];go:(p:Page)=>void}){
+ const [notes,setNotes]=useState(()=>localStorage.getItem("learning-notes")||"");useEffect(()=>localStorage.setItem("learning-notes",notes),[notes]);
+ const quizScore=localStorage.getItem("moneymap-quiz")||"Not completed";const nextModule=modules.find(x=>!done.includes(x[0]));const nextDay=thirtyDayPlan.find(x=>!days.includes(x.day));const overall=Math.round(((done.length/7)+(days.length/30))/2*100);
+ return <div className="page"><Intro kicker="YOUR LEARNING RECORD" title="Progress without pressure." text="Track useful actions and understanding, not streak anxiety. Your data stays in this browser."/><div className="progressHero"><div className="overall"><b>{overall}%</b><span>overall learning progress</span><Progress value={overall}/></div><div className="progressStats"><span><b>{done.length}/7</b>modules complete</span><span><b>{days.length}/30</b>path days complete</span><span><b>{quizScore}</b>latest quiz score</span></div></div>
+ <div className="progressGrid"><section><Head kicker="CONTINUE NEXT" title={nextDay?`Day ${nextDay.day}: ${nextDay.topic}`:"30-day path complete"}/><p>{nextDay?.action||"Review your notes and keep one weekly money-learning session."}</p><button className="done" onClick={()=>go("plan")}>Open 30-day path <ArrowRight/></button></section><section><Head kicker="NEXT MODULE" title={nextModule?.[3]||"All modules complete"}/><p>{nextModule?.[4]||"Use the source library to deepen the topics most relevant to you."}</p><button className="done" onClick={()=>go("learn")}>Open learning path <ArrowRight/></button></section></div>
+ <Head kicker="MILESTONES" title="Quiet wins worth noticing"/><div className="milestones">{[[days.length>=1,"Started the path","Completed the first guided day"],[done.length>=1,"Finished a module","Read lessons and answered a module check"],[days.length>=7,"Built a week","Completed seven guided learning days"],[done.length>=4,"Strong foundation","Completed more than half the modules"],[days.length===30,"Completed the path","Finished all 30 guided days"]].map(([hit,title,text])=><div className={hit?"earned":""} key={String(title)}><BadgeCheck/><b>{title}</b><span>{text}</span></div>)}</div>
+ <Head kicker="PRIVATE NOTES" title="What do you want to remember?"/><textarea className="notes" value={notes} onChange={e=>setNotes(e.target.value)} placeholder="Write reflections, questions to verify, or rules for your future self…"/></div>
+}
 function Resources(){
  const [q,setQ]=useState(""),[filter,setFilter]=useState("All");const cats=["All",...new Set(resources.map(x=>x[2]))];const shown=resources.filter(x=>(filter==="All"||x[2]===filter)&&x.join(" ").toLowerCase().includes(q.toLowerCase()));
  return <div className="page"><Intro kicker="CREDIBLE, FREE, USEFUL" title="Resource library" text="Government sources form the truth layer. Courses and creators are supplements, not substitutes."/><div className="search"><Search/><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search by topic or provider…"/></div><div className="filters">{cats.map(x=><button className={filter===x?"active":""} onClick={()=>setFilter(x)}>{x}</button>)}</div><div className="cards">{shown.map(r=><article key={r[0]}><span className={r[5]==="Truth source"?"safe":""}>{r[5]}</span><small>{r[2]}</small><h3>{r[0]}</h3><b>{r[1]}</b><p>{r[3]}</p><a href={r[4]} target="_blank">Open resource <ExternalLink/></a></article>)}</div></div>
@@ -71,7 +93,7 @@ function Tools(){
 function Quiz(){
  const [i,setI]=useState(0),[a,setA]=useState<number|null>(null),[score,setScore]=useState(0);const item=quiz[i];
  if(i===quiz.length)return <div className="page finish"><Target/><h1>{score}/{quiz.length}</h1><p>Keep checking claims at the source.</p><button onClick={()=>{setI(0);setA(null);setScore(0)}}>Try again</button></div>;
- return <div className="page quiz"><Progress value={(i+1)/quiz.length*100}/><span>Question {i+1} of {quiz.length}</span><h1>{item[0]}</h1>{item[1].map((x,n)=><button disabled={a!==null} className={a===null?"":n===item[2]?"correct":a===n?"wrong":""} onClick={()=>setA(n)}><b>{String.fromCharCode(65+n)}</b>{x}{a!==null&&n===item[2]&&<Check/>}</button>)}{a!==null&&<div className="action"><Lightbulb/><span><b>{a===item[2]?"Correct.":"Not quite."}</b>{item[3]}</span></div>}<button className="next" disabled={a===null} onClick={()=>{setScore(score+(a===item[2]?1:0));setI(i+1);setA(null)}}>Next <ArrowRight/></button></div>
+ return <div className="page quiz"><Progress value={(i+1)/quiz.length*100}/><span>Question {i+1} of {quiz.length}</span><h1>{item[0]}</h1>{item[1].map((x,n)=><button disabled={a!==null} className={a===null?"":n===item[2]?"correct":a===n?"wrong":""} onClick={()=>setA(n)}><b>{String.fromCharCode(65+n)}</b>{x}{a!==null&&n===item[2]&&<Check/>}</button>)}{a!==null&&<div className="action"><Lightbulb/><span><b>{a===item[2]?"Correct.":"Not quite."}</b>{item[3]}</span></div>}<button className="next" disabled={a===null} onClick={()=>{const nextScore=score+(a===item[2]?1:0);setScore(nextScore);if(i===quiz.length-1)localStorage.setItem("moneymap-quiz",`${nextScore}/${quiz.length}`);setI(i+1);setA(null)}}>Next <ArrowRight/></button></div>
 }
 function Coach(){
  const [msgs,setMsgs]=useState([["coach","Hi. I can explain concepts, challenge hype and help prepare better questions. I will not choose financial products or make decisions for you."]]),[text,setText]=useState("");const send=(q=text)=>{if(!q)return;setMsgs([...msgs,["you",q],["coach",reply(q)]]);setText("")};
