@@ -1,29 +1,23 @@
 # MoneyMap AU
 
-An Australian-first financial education app for learning personal finance, economics, investing basics, scam detection, and passive-income realism without the hype.
+A Next.js financial education app built for Australian users. It offers a guided learning path for personal finance, economics, investing, and realistic passive-income evaluation.
 
 ## Features
 
-- Seven-module learning path with local progress tracking
-- Searchable library of trusted Australian resources
-- Passive-income reality check and online-claim checker
-- Educational compound-growth explainer
-- Scored knowledge check
-- Cautious local education coach
-- Responsive, no-login design
+- Learning path with practical money modules
+- Resource library with credible Australian-first references
+- Quizzes to check financial judgment
+- Coach prompt interface with optional LLM integration
+- Simple tools and calculators
+- Passive income reality check and influencer filter
 
-MoneyMap AU is education only. It is not financial, tax, legal, or investment advice.
-
-## Development
+## Run locally
 
 ```bash
 npm install
 npm run dev
 ```
 
-Production checks:
+## Deploy
 
-```bash
-npm run lint
-npm run build
-```
+This app is ready to deploy to Vercel.
