@@ -21,3 +21,11 @@ npm run dev
 ## Deploy
 
 This app is ready to deploy to Vercel.
+
+## Testing
+
+Run the end-to-end tests using Playwright:
+
+```bash
+npm run test:e2e
+```
