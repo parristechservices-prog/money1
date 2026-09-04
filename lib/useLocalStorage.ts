@@ -7,12 +7,21 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
 
   useEffect(() => {
     const stored = window.localStorage.getItem(key);
-    if (stored) {
-      try {
-        setValue(JSON.parse(stored) as T);
-      } catch {
-        setValue(initialValue);
-      }
+    if (!stored) return;
+
+    try {
+      const restoredValue = JSON.parse(stored) as T;
+      let cancelled = false;
+
+      queueMicrotask(() => {
+        if (!cancelled) setValue(restoredValue);
+      });
+
+      return () => {
+        cancelled = true;
+      };
+    } catch {
+      // Keep the supplied initial value when persisted data is malformed.
     }
   }, [initialValue, key]);
 
