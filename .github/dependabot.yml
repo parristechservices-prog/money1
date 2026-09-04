@@ -4,3 +4,5 @@ updates:
     directory: '/'
     schedule:
       interval: 'weekly'
+    # Limit version updates to 0 so we only get security PRs
+    open-pull-requests-limit: 0
